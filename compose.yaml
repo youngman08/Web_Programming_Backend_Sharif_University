@@ -1,0 +1,42 @@
+services:
+  db:
+    image: postgres:bullseye
+    volumes:
+      - type: bind
+        source: ./db-init
+        target: /docker-entrypoint-initdb.d
+        read_only: true
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: postgres
+    healthcheck:
+      test: "pg_isready -h db -d $${POSTGRES_DB} -U $${POSTGRES_USER}"
+      interval: 5s
+      start_period: 45s
+    ports:
+      - "5432:5432"
+  parse-server:
+    image: parseplatform/parse-server:5.4.0
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      PARSE_SERVER_DATABASE_URI: postgres://postgres:postgres@db:5432/postgres
+      PARSE_SERVER_APPLICATION_ID: myAppId
+      PARSE_SERVER_MASTER_KEY: myMasterKey
+      PARSE_SERVER_URL: http://localhost:1337/
+      PARSE_SERVER_MOUNT_PATH: /
+    ports:
+      - "1337:1337"
+  parse-dashboard:
+    image: parseplatform/parse-dashboard:5.0.0
+    depends_on:
+      - parse-server
+    command: ["--dev"]
+    environment:
+      PARSE_DASHBOARD_APP_ID: myAppId
+      PARSE_DASHBOARD_MASTER_KEY: myMasterKey
+      PARSE_DASHBOARD_SERVER_URL: http://localhost:1337/
+    ports:
+      - "4040:4040"
