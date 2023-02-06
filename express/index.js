@@ -39,7 +39,7 @@ const main = async () => {
     const { body } = req;
     console.log(body);
     
-    const bodyBankTransaction = {receipt_id: 123, amount: 100, callback: "http://localhost:8080/TransactionCompleted"};
+    const bodyBankTransaction = {receipt_id: 123, amount: 100, callback: "http://localhost:8080/TransactionCompleted.html?"};
 
     const response = await fetch('http://localhost:8000/transaction/', {
       method: 'post',
@@ -76,6 +76,13 @@ const main = async () => {
       [body.corresponding_user_id, body.title, body.first_name, body.last_name, body.flight_serial, body.offer_price, body.offer_class, body.transaction_id, body.transaction_result]
     );
 
+    res.send(JSON.stringify(r.rows));
+  });
+
+  app.post("/cityList", async (req, res) => {
+    const r = await client.query(
+      "SELECT DISTINCT city FROM origin_destination"
+    );
     res.send(JSON.stringify(r.rows));
   });
 
