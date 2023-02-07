@@ -1,0 +1,18 @@
+{
+    "sourceFile": "express/index.js",
+    "activeCommit": 0,
+    "commits": [
+        {
+            "activePatchIndex": 0,
+            "patches": [
+                {
+                    "date": 1675766337380,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n"
+                }
+            ],
+            "date": 1675766337380,
+            "name": "Commit-0",
+            "content": "import express from \"express\";\r\nimport cors from \"cors\";\r\nimport pg from \"pg\";\r\nimport bodyParser from \"body-parser\";\r\n\r\nconst { Client } = pg;\r\n\r\nconst main = async () => {\r\n  const app = express();\r\n  app.use(cors());\r\n  app.use(bodyParser.json());\r\n  const client = new Client({\r\n    user: \"postgres\",\r\n    password: \"postgres\",\r\n    host: \"127.0.0.1\",\r\n    port: \"5432\",\r\n  });\r\n\r\n  await client.connect();\r\n\r\n  app.post(\"/search\", async (req, res) => {\r\n    const { body } = req;\r\n    console.log(body);\r\n    const r = await client.query(\r\n      `\r\n      SELECT f.*, c1.city AS source_city, c2.city AS dest_city\r\n      FROM flight f\r\n      JOIN origin_destination c1 ON f.origin = c1.iata\r\n      JOIN origin_destination c2 ON f.destination = c2.iata\r\n      WHERE c1.city = $1 AND c2.city = $2\r\n      `,\r\n      [body.from, body.to]\r\n    );\r\n    res.send(JSON.stringify(r.rows));\r\n  });\r\n\r\n  app.post(\"/transaction\", async (req, res) => {\r\n    const { body } = req;\r\n    console.log(body);\r\n    \r\n    const bodyBankTransaction = {receipt_id: 123, amount: 100, callback: \"http://localhost:8080/TransactionCompleted.html?\"};\r\n\r\n    const response = await fetch('http://localhost:8000/transaction/', {\r\n      method: 'post',\r\n      body: JSON.stringify(bodyBankTransaction),\r\n      headers: {'Content-Type': 'application/json'}\r\n    });\r\n    const data = await response.json();\r\n\r\n    console.log(data);\r\n    var url = \"http://localhost:8000/payment/\" + data.id;\r\n    const out = {url: url};\r\n    //res.status(200);\r\n    res.send(out);\r\n  });\r\n\r\n  app.post(\"/getAllPurchases\", async (req, res) => {\r\n    const r = await client.query(\r\n      `\r\n      SELECT * FROM purchase WHERE corresponding_user_id == $1\r\n      `,\r\n      [body.corresponding_user_id]\r\n    );\r\n\r\n    res.send(JSON.stringify(r.rows));\r\n  });\r\n\r\n  \r\n  app.post(\"/purchase\", async (req, res) => {\r\n    const { body } = req;\r\n\r\n    const r = await client.query(\r\n      `INSERT INTO purchase (corresponding_user_id, title, first_name, last_name, flight_serial, offer_price, offer_class, transaction_id, transaction_result)\r\n      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, &9)`,\r\n      [body.corresponding_user_id, body.title, body.first_name, body.last_name, body.flight_serial, body.offer_price, body.offer_class, body.transaction_id, body.transaction_result]\r\n    );\r\n\r\n    res.send(JSON.stringify(r.rows));\r\n  });\r\n\r\n  app.post(\"/cityList\", async (req, res) => {\r\n    const r = await client.query(\r\n      \"SELECT DISTINCT city FROM origin_destination\"\r\n    );\r\n    res.send(JSON.stringify(r.rows));\r\n  });\r\n\r\n  app.listen(12345);\r\n};\r\n\r\n\r\nmain();\r\n"
+        }
+    ]
+}
