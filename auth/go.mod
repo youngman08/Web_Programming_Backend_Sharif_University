@@ -9,7 +9,8 @@ require (
 	github.com/golang-jwt/jwt/v4 v4.0.0
 	github.com/klauspost/compress v1.13.5 // indirect
 	github.com/lib/pq v1.10.2
-	golang.org/x/crypto v0.0.0-20210817164053-32db794688a5
-	golang.org/x/sys v0.0.0-20210906170528-6f6e22806c34 // indirect
+	golang.org/x/crypto v0.4.0
+	gorm.io/driver/postgres v1.4.7
+	gorm.io/gorm v1.24.5
 	xorm.io/xorm v1.2.3
 )

@@ -2,31 +2,41 @@ package data
 
 import (
 	"fmt"
+	"time"
 
 	_ "github.com/lib/pq"
-	"xorm.io/xorm"
+	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
 )
 
 type User struct {
-	Id             int64
-	Name           string
-	PassportNumber int
+	UserId         int64 `gorm:"primaryKey"`
 	Email          string
-	Password       string `json:"-"`
+	PhoneNumber    string
+	gender         string
+	FirstName      string
+	lastName       string
+	PassportNumber int
+	PasswordHash   string             `json:"-"`
+	tokens         Unauthorized_token `gorm:"references:user_id"`
 }
 
-func CreateDBEngine() (*xorm.Engine, error) {
-	connectionInfo := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable", "localhost", 5432, "postgres", "postgres", "authServer")
-	engine, err := xorm.NewEngine("postgres", connectionInfo)
-	if err != nil {
-		return nil, err
-	}
-	if err := engine.Ping(); err != nil {
-		return nil, err
-	}
-	if err := engine.Sync(new(User)); err != nil {
-		return nil, err
-	}
+type Unauthorized_token struct {
+	user_id    int
+	token      string
+	expiration time.Time
+}
 
-	return engine, nil
+func CreateDBEngine() (*gorm.DB, error) {
+
+	dsn := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable", "localhost", 5432, "postgres", "postgres", "authServer")
+
+	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
+	if err != nil {
+		panic("failed to connect to database")
+	}
+	db.AutoMigrate(&User{})
+	db.AutoMigrate(&Unauthorized_token{})
+
+	return db, nil
 }

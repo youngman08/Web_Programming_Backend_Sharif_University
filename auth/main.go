@@ -62,14 +62,14 @@ func main() {
 		}
 
 		user := &data.User{
-			Name:           req.Name,
+			FirstName:      req.Name,
 			PassportNumber: passNumber,
 			Email:          req.Email,
-			Password:       string(hash),
+			PasswordHash:   string(hash),
 		}
 
-		_, err = engine.Insert(user)
-		if err != nil {
+		result := engine.Create(user)
+		if result.Error != nil {
 			return err
 		}
 		token, exp, err := createJWTToken(*user)
@@ -92,15 +92,15 @@ func main() {
 		}
 
 		user := new(data.User)
-		has, err := engine.Where("email = ?", req.Email).Desc("id").Get(user)
-		if err != nil {
+		result := engine.First(&user, "email = ?", req.Email)
+		if result.Error != nil {
 			return err
 		}
-		if !has {
+		if user.UserId == 0 {
 			return c.Status(404).JSON(fiber.Map{"error": "invalid login credentials"})
 		}
 
-		if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(req.Password)); err != nil {
+		if err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(req.Password)); err != nil {
 			return err
 		}
 
@@ -136,7 +136,7 @@ func createJWTToken(user data.User) (string, int64, error) {
 	exp := time.Now().Add(time.Minute * 60).Unix()
 	token := jwt.New(jwt.SigningMethodHS256)
 	claims := token.Claims.(jwt.MapClaims)
-	claims["user_id"] = user.Id
+	claims["user_id"] = user.UserId
 	claims["exp"] = exp
 	t, err := token.SignedString([]byte("secret"))
 	if err != nil {
