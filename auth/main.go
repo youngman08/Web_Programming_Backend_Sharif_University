@@ -1,10 +1,12 @@
 package main
 
 import (
+	"fmt"
 	"strconv"
 	"time"
 
 	"github.com/floydjones1/auth-server/data"
+	"github.com/go-redis/redis"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	jwtware "github.com/gofiber/jwt/v3"
@@ -29,6 +31,12 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+
+	redisClient := redis.NewClient(&redis.Options{
+		Addr:     "localhost:6379",
+		Password: "",
+		DB:       0,
+	})
 
 	app := fiber.New()
 
@@ -94,9 +102,6 @@ func main() {
 		user := new(data.User)
 		result := engine.First(&user, "email = ?", req.Email)
 		if result.Error != nil {
-			return err
-		}
-		if user.UserId == 0 {
 			return c.Status(404).JSON(fiber.Map{"error": "invalid login credentials"})
 		}
 
@@ -112,19 +117,35 @@ func main() {
 		return c.JSON(fiber.Map{"token": token, "exp": exp, "user": user})
 	})
 
-	private := app.Group("/private")
-	private.Use(jwtware.New(jwtware.Config{
+	info_route := app.Group("/info")
+	info_route.Use(jwtware.New(jwtware.Config{
 		SigningKey: []byte("secret"),
 	}))
-	private.Get("/", func(c *fiber.Ctx) error {
+	info_route.Get("/", func(c *fiber.Ctx) error {
+		user := c.Locals("user").(*jwt.Token)
 
-		return c.JSON(fiber.Map{"success": true, "path": "private"})
-	})
+		claims := user.Claims.(jwt.MapClaims)
 
-	public := app.Group("/public")
-	public.Get("/", func(c *fiber.Ctx) error {
+		exp_time := time.Unix(int64(claims["exp"].(float64)), 0)
+		now := time.Now()
 
-		return c.JSON(fiber.Map{"success": true, "path": "public"})
+		if exp_time.Sub(now) < 0 {
+			// Add to expired tokens
+			redisClient.LPush("unauthorized", user.Raw)
+
+			token := &data.Unauthorized_token{
+				UserId:     int64(claims["user_id"].(float64)),
+				Token:      user.Raw,
+				Expiration: exp_time,
+			}
+			result := engine.Create(token)
+			if result.Error != nil {
+				return err
+			}
+			fmt.Println(redisClient.LRange("unauthorized", 0, -1))
+		}
+
+		return c.JSON(fiber.Map{"user_id": claims["user_id"], "PassportNumber": claims["PassportNumber"]})
 	})
 
 	if err := app.Listen("localhost:3001"); err != nil {
@@ -137,6 +158,8 @@ func createJWTToken(user data.User) (string, int64, error) {
 	token := jwt.New(jwt.SigningMethodHS256)
 	claims := token.Claims.(jwt.MapClaims)
 	claims["user_id"] = user.UserId
+	claims["FirstName"] = user.FirstName
+	claims["PassportNumber"] = user.PassportNumber
 	claims["exp"] = exp
 	t, err := token.SignedString([]byte("secret"))
 	if err != nil {

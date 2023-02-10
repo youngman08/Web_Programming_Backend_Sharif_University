@@ -17,14 +17,13 @@ type User struct {
 	FirstName      string
 	lastName       string
 	PassportNumber int
-	PasswordHash   string             `json:"-"`
-	tokens         Unauthorized_token `gorm:"references:user_id"`
+	PasswordHash   string `json:"-"`
 }
 
 type Unauthorized_token struct {
-	user_id    int
-	token      string
-	expiration time.Time
+	UserId     int64
+	Token      string
+	Expiration time.Time
 }
 
 func CreateDBEngine() (*gorm.DB, error) {
