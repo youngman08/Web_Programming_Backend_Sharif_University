@@ -124,6 +124,12 @@ func main() {
 	info_route.Get("/", func(c *fiber.Ctx) error {
 		user := c.Locals("user").(*jwt.Token)
 
+		for _, b := range redisClient.LRange("unauthorized", 0, -1).Val() {
+			if b == user.Raw {
+				return c.Status(400).JSON(fiber.Map{"Error": "Expired Token"})
+			}
+		}
+
 		claims := user.Claims.(jwt.MapClaims)
 
 		exp_time := time.Unix(int64(claims["exp"].(float64)), 0)
@@ -142,7 +148,7 @@ func main() {
 			if result.Error != nil {
 				return err
 			}
-			fmt.Println(redisClient.LRange("unauthorized", 0, -1))
+			return c.Status(400).JSON(fiber.Map{"Error": "Expired Token"})
 		}
 
 		return c.JSON(fiber.Map{"user_id": claims["user_id"], "PassportNumber": claims["PassportNumber"]})
