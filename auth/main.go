@@ -8,6 +8,7 @@ import (
 	"github.com/go-redis/redis"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
+	"github.com/gofiber/fiber/v2/middleware/logger"
 	jwtware "github.com/gofiber/jwt/v3"
 	"github.com/golang-jwt/jwt/v4"
 	"golang.org/x/crypto/bcrypt"
@@ -39,8 +40,10 @@ func main() {
 
 	app := fiber.New()
 
+	app.Use(logger.New())
+
 	app.Use(cors.New(cors.Config{
-		AllowHeaders:     "Origin,Content-Type,Accept,Content-Length,Accept-Language,Accept-Encoding,Connection,Access-Control-Allow-Origin",
+		AllowHeaders:     "Origin,Content-Type,Accept,Content-Length,Accept-Language,Accept-Encoding,Connection,Access-Control-Allow-Origin,Authorization",
 		AllowOrigins:     "*",
 		AllowCredentials: true,
 		AllowMethods:     "GET,POST,HEAD,PUT,DELETE,PATCH,OPTIONS",
@@ -149,7 +152,7 @@ func main() {
 			return c.Status(400).JSON(fiber.Map{"Error": "Expired Token"})
 		}
 
-		return c.JSON(fiber.Map{"user_id": claims["user_id"], "PassportNumber": claims["PassportNumber"]})
+		return c.JSON(fiber.Map{"user_id": claims["user_id"], "PassportNumber": claims["PassportNumber"], "Name": claims["FirstName"]})
 	})
 
 	app.Get("/logout", func(c *fiber.Ctx) error {
