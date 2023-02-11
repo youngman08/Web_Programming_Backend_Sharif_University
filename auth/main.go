@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"strconv"
 	"time"
 
@@ -117,11 +116,10 @@ func main() {
 		return c.JSON(fiber.Map{"token": token, "exp": exp, "user": user})
 	})
 
-	info_route := app.Group("/info")
-	info_route.Use(jwtware.New(jwtware.Config{
+	app.Use(jwtware.New(jwtware.Config{
 		SigningKey: []byte("secret"),
 	}))
-	info_route.Get("/", func(c *fiber.Ctx) error {
+	app.Get("/info", func(c *fiber.Ctx) error {
 		user := c.Locals("user").(*jwt.Token)
 
 		for _, b := range redisClient.LRange("unauthorized", 0, -1).Val() {
@@ -152,6 +150,28 @@ func main() {
 		}
 
 		return c.JSON(fiber.Map{"user_id": claims["user_id"], "PassportNumber": claims["PassportNumber"]})
+	})
+
+	app.Get("/logout", func(c *fiber.Ctx) error {
+		user := c.Locals("user").(*jwt.Token)
+
+		claims := user.Claims.(jwt.MapClaims)
+
+		exp_time := time.Unix(int64(claims["exp"].(float64)), 0)
+
+		redisClient.LPush("unauthorized", user.Raw)
+
+		token := &data.Unauthorized_token{
+			UserId:     int64(claims["user_id"].(float64)),
+			Token:      user.Raw,
+			Expiration: exp_time,
+		}
+		result := engine.Create(token)
+		if result.Error != nil {
+			return c.JSON(fiber.Map{"Logout": "Error"})
+		}
+
+		return c.JSON(fiber.Map{"Logout": "Success"})
 	})
 
 	if err := app.Listen("localhost:3001"); err != nil {
