@@ -37,6 +37,14 @@ func main() {
 		Password: "",
 		DB:       0,
 	})
+	redisClient.Del("unauthorized")
+
+	// Add db data
+	var records []data.Unauthorized_token
+	engine.Find(&records)
+	for _, b := range records {
+		redisClient.LPush("unauthorized", b)
+	}
 
 	app := fiber.New()
 
