@@ -1,6 +1,6 @@
 services:
   db:
-    image: postgres:bullseye
+    image: postgres:15.1-bullseye
     volumes:
       - type: bind
         source: ./db-init
@@ -40,3 +40,18 @@ services:
       PARSE_DASHBOARD_SERVER_URL: http://localhost:1337/
     ports:
       - "4040:4040"
+
+  redis:
+    image: redis:6-alpine
+    ports:
+      - 6379:6379
+
+  webapp:
+    build:
+      context: "."
+      dockerfile: Dockerfile.backend
+    command: "go run main.go"
+    ports:
+      - 3001:3001
+    depends_on:
+      - db
