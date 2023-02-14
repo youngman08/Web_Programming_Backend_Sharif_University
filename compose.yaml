@@ -1,4 +1,9 @@
 services:
+  redis:
+    image: redis:6-alpine
+    ports:
+      - 6379:6379
+
   db:
     image: postgres:bullseye
     volumes:
@@ -16,6 +21,7 @@ services:
       start_period: 45s
     ports:
       - "5432:5432"
+
   parse-server:
     image: parseplatform/parse-server:5.4.0
     depends_on:
@@ -40,3 +46,23 @@ services:
       PARSE_DASHBOARD_SERVER_URL: http://localhost:1337/
     ports:
       - "4040:4040"
+
+  auth:
+    image: auth:1.0.0
+    build:
+      context: "./auth"
+      dockerfile: Dockerfile.backend
+    command: "go run main.go"
+    ports:
+      - 3001:3001
+    depends_on:
+      - db
+      - redis
+
+  front:
+    image: front:1.0.0
+    build:
+      context: "./front"
+      dockerfile: Dockerfile
+    ports:
+      - 8000:8080
