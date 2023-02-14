@@ -11,6 +11,7 @@ services:
         source: ./db-init
         target: /docker-entrypoint-initdb.d
         read_only: true
+      - db-data:/var/lib/postgresql/data
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
@@ -75,3 +76,6 @@ services:
     build:
       context: "./express"
       dockerfile: Dockerfile
+
+volumes:
+  db-data:
