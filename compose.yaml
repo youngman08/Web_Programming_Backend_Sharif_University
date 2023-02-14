@@ -66,3 +66,9 @@ services:
       dockerfile: Dockerfile
     ports:
       - 8000:8080
+
+  ticket:
+    image: ticket:1.0.0
+    build:
+      context: "./express"
+      dockerfile: Dockerfile
