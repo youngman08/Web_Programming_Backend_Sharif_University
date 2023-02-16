@@ -12,6 +12,7 @@ import (
 	jwtware "github.com/gofiber/jwt/v3"
 	"github.com/golang-jwt/jwt/v4"
 	"golang.org/x/crypto/bcrypt"
+	"gorm.io/gorm"
 )
 
 type SignupRequest struct {
@@ -37,13 +38,17 @@ func main() {
 		Password: "",
 		DB:       0,
 	})
-	redisClient.Del("unauthorized")
 
-	// Add db data
-	var records []data.Unauthorized_token
-	engine.Find(&records)
-	for _, b := range records {
-		redisClient.LPush("unauthorized", b)
+	if err := redisClient.Ping(); err == nil {
+		// Created last daat
+		redisClient.Del("unauthorized")
+
+		// Add db data
+		var records []data.Unauthorized_token
+		engine.Find(&records)
+		for _, b := range records {
+			redisClient.LPush("unauthorized", b)
+		}
 	}
 
 	app := fiber.New()
@@ -133,10 +138,9 @@ func main() {
 	app.Get("/info", func(c *fiber.Ctx) error {
 		user := c.Locals("user").(*jwt.Token)
 
-		for _, b := range redisClient.LRange("unauthorized", 0, -1).Val() {
-			if b == user.Raw {
-				return c.Status(400).JSON(fiber.Map{"Error": "Expired Token"})
-			}
+		shouldReturn, returnValue := CheckTokenIsValid(redisClient, user, c, engine)
+		if shouldReturn {
+			return returnValue
 		}
 
 		claims := user.Claims.(jwt.MapClaims)
@@ -145,8 +149,10 @@ func main() {
 		now := time.Now()
 
 		if exp_time.Sub(now) < 0 {
-			// Add to expired tokens
-			redisClient.LPush("unauthorized", user.Raw)
+			if err := redisClient.Ping(); err == nil {
+				// Add to expired tokens
+				redisClient.LPush("unauthorized", user.Raw)
+			}
 
 			token := &data.Unauthorized_token{
 				UserId:     int64(claims["user_id"].(float64)),
@@ -170,7 +176,10 @@ func main() {
 
 		exp_time := time.Unix(int64(claims["exp"].(float64)), 0)
 
-		redisClient.LPush("unauthorized", user.Raw)
+		if err := redisClient.Ping(); err == nil {
+			// Add to expired tokens
+			redisClient.LPush("unauthorized", user.Raw)
+		}
 
 		token := &data.Unauthorized_token{
 			UserId:     int64(claims["user_id"].(float64)),
@@ -188,6 +197,27 @@ func main() {
 	if err := app.Listen("localhost:3001"); err != nil {
 		panic(err)
 	}
+}
+
+func CheckTokenIsValid(redisClient *redis.Client, user *jwt.Token, c *fiber.Ctx, db *gorm.DB) (bool, error) {
+	err := redisClient.Ping()
+	if err == nil {
+		for _, b := range redisClient.LRange("unauthorized", 0, -1).Val() {
+			if b == user.Raw {
+				return true, c.Status(400).JSON(fiber.Map{"Error": "Expired Token"})
+			}
+		}
+	} else {
+		var records []data.Unauthorized_token
+		db.Find(&records)
+		for _, token := range records {
+			if token.Token == user.Raw {
+				return true, c.Status(400).JSON(fiber.Map{"Error": "Expired Token"})
+			}
+		}
+	}
+
+	return false, nil
 }
 
 func createJWTToken(user data.User) (string, int64, error) {
