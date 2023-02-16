@@ -1,0 +1,22 @@
+{
+    "sourceFile": "go/main.go",
+    "activeCommit": 0,
+    "commits": [
+        {
+            "activePatchIndex": 1,
+            "patches": [
+                {
+                    "date": 1675786612251,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n"
+                },
+                {
+                    "date": 1675786778601,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -1,8 +1,22 @@\n-func Setup(app *fiber.App) {\r\n+package main\r\n \r\n-\tapp.Post(\"/api/register\", controllers.Register)\r\n-\tapp.Post(\"/api/login\", controllers.Login)\r\n-\tapp.Get(\"/api/user\", controllers.User)\r\n-\tapp.Post(\"/api/logout\", controllers.Logout)\r\n+import (\r\n\\ No newline at end of file\n+\t\"./database\"\r\n+\t\"./routes\"\r\n+\t\"github.com/gofiber/fiber\"\r\n+\t\"github.com/gofiber/fiber/middleware/cors\"\r\n+)\r\n \r\n-}\n+func main() {\r\n+\tdatabase.Connect()\r\n+\r\n+\tapp := fiber.New()\r\n+\r\n+\tapp.Use(cors.New(cors.Config{\r\n+\t\tAllowCredentials: true,\r\n+\t}))\r\n+\r\n+\troutes.Setup(app)\r\n+\r\n+\tapp.Listen(\":8000\")\r\n+}\r\n"
+                }
+            ],
+            "date": 1675786612251,
+            "name": "Commit-0",
+            "content": "func Setup(app *fiber.App) {\r\n\r\n\tapp.Post(\"/api/register\", controllers.Register)\r\n\tapp.Post(\"/api/login\", controllers.Login)\r\n\tapp.Get(\"/api/user\", controllers.User)\r\n\tapp.Post(\"/api/logout\", controllers.Logout)\r\n\r\n}"
+        }
+    ]
+}
