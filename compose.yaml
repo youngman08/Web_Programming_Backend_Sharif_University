@@ -5,7 +5,7 @@ services:
       - 6379:6379
 
   db:
-    image: postgres:bullseye
+    image: postgres:15.1-bullseye
     volumes:
       - type: bind
         source: ./db-init
