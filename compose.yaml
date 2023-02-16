@@ -1,4 +1,9 @@
 services:
+  redis:
+    image: redis:6-alpine
+    ports:
+      - 6379:6379
+
   db:
     image: postgres:15.1-bullseye
     volumes:
@@ -6,6 +11,7 @@ services:
         source: ./db-init
         target: /docker-entrypoint-initdb.d
         read_only: true
+      - db-data:/var/lib/postgresql/data
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
@@ -16,6 +22,7 @@ services:
       start_period: 45s
     ports:
       - "5432:5432"
+
   parse-server:
     image: parseplatform/parse-server:5.4.0
     depends_on:
@@ -41,17 +48,41 @@ services:
     ports:
       - "4040:4040"
 
-  redis:
-    image: redis:6-alpine
-    ports:
-      - 6379:6379
-
-  webapp:
+  auth:
+    image: auth:1.0.0
     build:
-      context: "."
+      context: "./auth"
       dockerfile: Dockerfile.backend
     command: "go run main.go"
+    pull_policy: build
     ports:
       - 3001:3001
     depends_on:
       - db
+      - redis
+
+  front:
+    image: front:1.0.0
+    build:
+      context: "./front"
+      dockerfile: Dockerfile
+    pull_policy: build
+    ports:
+      - 8000:8080
+
+  ticket:
+    image: ticket:1.0.0
+    pull_policy: build
+    build:
+      context: "./express"
+      dockerfile: Dockerfile
+
+  bank:
+    image: bank:1.0.0
+    pull_policy: build
+    build:
+      context: "./Bank"
+      dockerfile: Dockerfile
+
+volumes:
+  db-data:
