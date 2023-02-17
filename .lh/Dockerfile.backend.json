@@ -1,0 +1,26 @@
+{
+    "sourceFile": "Dockerfile.backend",
+    "activeCommit": 0,
+    "commits": [
+        {
+            "activePatchIndex": 2,
+            "patches": [
+                {
+                    "date": 1676401468907,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n"
+                },
+                {
+                    "date": 1676401474382,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -4,7 +4,7 @@\n \r\n \r\n \r\n ADD . .\r\n-\r\n+WORKDIR /app/\r\n RUN go get\r\n \r\n"
+                },
+                {
+                    "date": 1676401481342,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -2,9 +2,9 @@\n \r\n FROM golang:1.17-alpine\r\n \r\n \r\n-\r\n+WORKDIR /app\r\n ADD . .\r\n-WORKDIR /app/\r\n+WORKDIR /app/auth\r\n RUN go get\r\n \r\n"
+                }
+            ],
+            "date": 1676401468907,
+            "name": "Commit-0",
+            "content": "# syntax=docker/dockerfile:1\r\n\r\nFROM golang:1.17-alpine\r\n\r\n\r\n\r\nADD . .\r\n\r\nRUN go get\r\n\r\n"
+        }
+    ]
+}
