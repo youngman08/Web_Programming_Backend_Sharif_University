@@ -88,7 +88,7 @@ services:
     ports:
       - 8002:8000
 
-  nginx:
+  mynginx:
     image: mynginx:1.0.0
     pull_policy: build
     build:
