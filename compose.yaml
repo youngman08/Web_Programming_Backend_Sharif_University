@@ -84,7 +84,9 @@ services:
     pull_policy: build
     build:
       context: "./Bank"
-      dockerfile: Dockerfile
+      dockerfile: 
+    ports:
+      - 8002:8000
 
 volumes:
   db-data:
