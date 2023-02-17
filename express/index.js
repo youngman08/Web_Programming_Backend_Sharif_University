@@ -13,7 +13,8 @@ const main = async () => {
   const client = new Client({
     user: "postgres",
     password: "postgres",
-    host: "127.0.0.1",
+    database: "postgres",
+    host: "db",
     port: "5432",
   });
 

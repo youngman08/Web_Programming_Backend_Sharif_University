@@ -76,6 +76,8 @@ services:
     build:
       context: "./express"
       dockerfile: Dockerfile
+    ports:
+      - 8001:12345
 
   bank:
     image: bank:1.0.0
