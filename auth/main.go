@@ -196,7 +196,7 @@ func main() {
 		return c.JSON(fiber.Map{"Logout": "Success"})
 	})
 
-	if err := app.Listen("http://localhost:3001"); err != nil {
+    if err := app.Listen("0.0.0.0:3001"); err != nil {
 		panic(err)
 	}
 }
