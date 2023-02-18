@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"strconv"
 	"time"
 
@@ -35,7 +36,7 @@ func main() {
 	}
 
 	redisClient := redis.NewClient(&redis.Options{
-		Addr:     "localhost:6379",
+		Addr:     "redis:6379",
 		Password: "",
 		DB:       0,
 	})
@@ -68,7 +69,7 @@ func main() {
 		if err := c.BodyParser(req); err != nil {
 			return err
 		}
-
+		fmt.Println("Hello World!")
 		if req.Name == "" || req.Email == "" || req.Password == "" || req.PassportNumber == "" {
 			return c.Status(404).JSON(fiber.Map{"error": "invalid signup credentials"})
 		}
@@ -78,13 +79,13 @@ func main() {
 		if err != nil {
 			return err
 		}
-
+		fmt.Println("Hello World2!")
 		passNumber, err := strconv.Atoi(req.PassportNumber)
 
 		if err != nil {
 			return err
 		}
-
+		fmt.Println("Hello World3!")
 		user := &data.User{
 			FirstName:      req.Name,
 			PassportNumber: passNumber,
@@ -101,7 +102,7 @@ func main() {
 			return err
 		}
 		// create a jwt token
-
+		fmt.Println("Hello World4!")
 		return c.JSON(fiber.Map{"token": token, "exp": exp, "user": user})
 	})
 
@@ -195,7 +196,7 @@ func main() {
 		return c.JSON(fiber.Map{"Logout": "Success"})
 	})
 
-	if err := app.Listen("localhost:3001"); err != nil {
+	if err := app.Listen("http://localhost:3001"); err != nil {
 		panic(err)
 	}
 }

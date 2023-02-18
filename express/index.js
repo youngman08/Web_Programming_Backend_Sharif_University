@@ -40,9 +40,11 @@ const main = async () => {
     const { body } = req;
     console.log(body);
     
-    const bodyBankTransaction = {receipt_id: 123, amount: 100, callback: "http://localhost:8000/TransactionCompleted.html?"};
+    // http://localhost:8000
+    const bodyBankTransaction = {receipt_id: 123, amount: 100, callback: "api/ticket/TransactionCompleted.html?"};
 
-    const response = await fetch('http://localhost:8002/transaction/', {
+    // http://localhost:8002/transaction/
+    const response = await fetch('api/bank/transaction', {
       method: 'post',
       body: JSON.stringify(bodyBankTransaction),
       headers: {'Content-Type': 'application/json'}
@@ -50,7 +52,8 @@ const main = async () => {
     const data = await response.json();
 
     console.log(data);
-    var url = "http://localhost:8002/payment/" + data.id;
+    // http://localhost:8002
+    var url = "api/bank/payment/" + data.id;
     const out = {url: url};
     //res.status(200);
     res.send(out);
