@@ -41,10 +41,10 @@ const main = async () => {
     console.log(body);
     
     // http://localhost:8000
-    const bodyBankTransaction = {receipt_id: 123, amount: 100, callback: "api/ticket/TransactionCompleted.html?"};
+    const bodyBankTransaction = {receipt_id: 123, amount: 100, callback: "http://localhost/TransactionCompleted.html?"};
 
     // http://localhost:8002/transaction/
-    const response = await fetch('api/bank/transaction', {
+    const response = await fetch('http://bank:8080/transaction/', {
       method: 'post',
       body: JSON.stringify(bodyBankTransaction),
       headers: {'Content-Type': 'application/json'}
@@ -53,18 +53,19 @@ const main = async () => {
 
     console.log(data);
     // http://localhost:8002
-    var url = "api/bank/payment/" + data.id;
+    var url = "http://localhost:8002/payment/" + data.id;
     const out = {url: url};
     //res.status(200);
     res.send(out);
   });
 
   app.post("/getAllPurchases", async (req, res) => {
+    const { body } = req;
     const r = await client.query(
       `
       SELECT * FROM purchase WHERE corresponding_user_id == $1
       `,
-      [body.corresponding_user_id]
+      [body.userId]
     );
 
     res.send(JSON.stringify(r.rows));

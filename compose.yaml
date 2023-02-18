@@ -88,7 +88,7 @@ services:
       context: "./Bank"
       dockerfile: Dockerfile
     ports:
-      - 8002:8000
+      - 8002:8080
 
   reverse-proxy:
     image: reverse-proxy:1.0.0
