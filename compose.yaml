@@ -48,18 +48,17 @@ services:
     ports:
       - "4040:4040"
 
-  # auth:
-  #   image: auth:1.0.0
-  #   build:
-  #     context: "./auth"
-  #     dockerfile: Dockerfile.backend
-  #   command: "go run main.go"
-  #   pull_policy: build
-  #   ports:
-  #     - 3001:3001
-  #   depends_on:
-  #     - db
-  #     - redis
+  auth:
+    image: auth:1.0.0
+    build:
+      context: "./auth"
+      dockerfile: Dockerfile
+    pull_policy: build
+    ports:
+      - 3001:3001
+    depends_on:
+      - db
+      - redis
 
   front:
     image: front:1.0.0
