@@ -30,12 +30,13 @@ class WebsiteUser(HttpUser):
 
     # search
     @task(10)
-    def get_dashboard(self):
+    def get_search(self):
         for _ in range(100):
             result = self.client.get(f"api/ticket/search", json={"From": "Tehran", "To":"Mashhad", "date": "2022-10-10", "passengerCount":"2"}).json()
         # assert result['status'] == True
 
     # ticket transaction 
+    @task
     def get_ticket_transaction(self):
         for _ in range(1, 100):
             result = self.client.get(f"api/ticket/transaction", json={"receipt_id": f"{_}", "amount":f"{_}"}).json()
